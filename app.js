@@ -1,13 +1,13 @@
-const sharp = require('sharp')
+const sharp = require('sharp'), fs = require('fs')
 
 const files = [
-  [48, '0.png'],
-  [72, '1.png'],
-  [96, '2.png'],
-  [144, '3.png'],
-  [192, '4.png'],
-  [384, '5.png'],
-  [512, '6.png']
+  [48, 'mipmap-mdpi/', 'ic_launcher.png'],
+  [72, 'mipmap-hdpi/','ic_launcher.png'],
+  [96, 'mipmap-xhdpi/','ic_launcher.png'],
+  [144, 'mipmap-xxhdpi/','ic_launcher.png'],
+  [192, 'mipmap-xxxhdpi/','ic_launcher.png'],
+  [384, 'mipmap-xxxxhdpi/','ic_launcher.png'],
+  [512, '','logo.png']
 ]
 
 const width = 1024
@@ -24,9 +24,14 @@ async function main() {
     .composite([{
       input: circleShape,
       blend: 'dest-in'
-    }]).toBuffer()
+    }])
+    .toBuffer()
+
+  if (!fs.existsSync('./output/')) fs.mkdirSync('./output/')
 
   files.forEach(item => {
+    if (!fs.existsSync('./output/' + item[1])) fs.mkdirSync('./output/' + item[1])
+
     const innerSize = Math.round(item[0] * .92 / 2) * 2
     const margin = (item[0] - innerSize) / 2
     sharp(baseImage)
@@ -39,7 +44,7 @@ async function main() {
         background: { r: 0, g: 0, b: 0, alpha: 0 }
       })
       .png()
-      .toFile('output/' + item[1], (err, _) => {
+      .toFile('./output/' + item[1] + item[2], (err, _) => {
         if (err) console.error(err.message)
         else console.log('Created image')
       })
