@@ -36,46 +36,53 @@ async function main() {
   if (!fs.existsSync('./output/pwa/')) fs.mkdirSync('./output/pwa/')
   if (!fs.existsSync('./output/pwa/temp')) fs.mkdirSync('./output/pwa/temp')
 
+  let backgroundColor = '#fff'
+  if (process.argv[2] === 'dominant') backgroundColor = (await sharp('input.png').stats()).dominant
+  else if (process.argv[2] === 'dark') backgroundColor = '#121212'
+  else if (process.argv[2] === 'color' && process.argv[3] != null) backgroundColor = process.argv[3]
+
   // Preview
   sharp('input.png')
     .resize(256, 256, {
         fit: sharp.fit.contain,
-        background: '#fff'
+        background: backgroundColor
     })
-    .flatten({ background: '#fff' })
+    .flatten({ background: backgroundColor })
     .extend({
       top: 187,
       bottom: 187,
       left: 472,
       right: 472,
-      background: '#fff'
+      background: backgroundColor
     })
-    .png()
+    .jpeg({
+      quality: 60
+    })
     .toFile('./output/preview.jpg', (err, _) => {
       if (err) console.error(err.message)
-      else console.log('Created image: 1200 x 630')
+      else console.log('Created jpg image: 1200 x 630')
     })
 
   // Apple touch icon
   sharp('input.png')
     .resize(APPLE_TOUCH_ICON_SIZE, APPLE_TOUCH_ICON_SIZE, {
         fit: sharp.fit.contain,
-        background: '#fff'
+        background: backgroundColor
     })
-    .flatten({ background: '#fff' })
+    .flatten({ background: backgroundColor })
     .png()
     .toFile('./output/apple-touch-icon.png', (err, _) => {
       if (err) console.error(err.message)
-      else console.log('Created image: ' + APPLE_TOUCH_ICON_SIZE)
+      else console.log('Created png image: ' + APPLE_TOUCH_ICON_SIZE)
     })
 
   // PWA icons
   const baseImage = await sharp('input.png')
     .resize(width, width, {
         fit: sharp.fit.contain,
-        background: '#fff'
+        background: backgroundColor
     })
-    .flatten({ background: '#fff' })
+    .flatten({ background: backgroundColor })
     .composite([{
       input: circleShape,
       blend: 'dest-in'
@@ -98,7 +105,7 @@ async function main() {
       .png()
       .toFile('./output/pwa/' + item[1] + item[2], (err, info) => {
         if (err) console.error(err.message)
-        else console.log('Created image: ' + info.width)
+        else console.log('Created png image: ' + info.width)
       })
   }
 
@@ -106,8 +113,10 @@ async function main() {
   while (!fs.existsSync('./output/pwa/temp/256.png')) await delay(100)
   toIco([fs.readFileSync('./output/pwa/temp/256.png')]).then(buf => {
     fs.writeFileSync('./output/favicon.ico', buf)
-    console.log('Created image: 256')
-  })
+    console.log('Created ico image: 256')
+  }).catch(error => {
+    console.error(error)
+  });
   fs.rmdirSync('./output/pwa/temp', { recursive: true })
 }
 

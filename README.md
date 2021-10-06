@@ -9,3 +9,4 @@ Type `npm install` to install the program.
 ## How To Run
 To run the program make sure that `input.png` exists and is the image you want it to be.
 After that type `node ./app.js`.
+You can type `node ./app.js dominant`, `node ./app.js dark` or `node ./app.js color #ff0000` for different background colors.
