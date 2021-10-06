@@ -14,6 +14,11 @@ const width = 1024
 const r = width / 2
 const circleShape = Buffer.from(`<svg><circle cx="${r}" cy="${r}" r="${r}" /></svg>`)
 
+if (!fs.existsSync('input.png')) {
+  console.log('Please make sure a file named "input.png" exists in this directory')
+  process.exit(1)
+}
+
 async function main() {
   const baseImage = await sharp('input.png')
     .resize(width, width, {
