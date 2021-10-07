@@ -1,7 +1,7 @@
-const fs = require('fs'), sharp = require('sharp'), toIco = require('to-ico')
+const fs = require('fs'), sharp = require('sharp'), toIco = require('to-ico');
 
-const ICON_MAX_SIZE = 1024
-const APPLE_TOUCH_ICON_SIZE = 180
+const ICON_MAX_SIZE = 1024;
+const APPLE_TOUCH_ICON_SIZE = 180;
 
 const files = [
   [48, 'mipmap-mdpi/', 'ic_launcher.png'],
@@ -12,31 +12,31 @@ const files = [
   [384, 'mipmap-xxxxhdpi/','ic_launcher.png'],
   [512, '','logo.png'],
   [256, 'temp/','256.png']
-]
+];
 
 if (!fs.existsSync('input.png')) {
-  console.log('Please make sure a file named "input.png" exists in this directory')
-  process.exit(1)
+  console.log('Please make sure a file named "input.png" exists in this directory');
+  process.exit(1);
 }
 
-let innerSize = 0
-let margin = 0
+let innerSize = 0;
+let margin = 0;
 
 function delay(t) {
   return new Promise(resolve => {
-     setTimeout(resolve, t)
+     setTimeout(resolve, t);
   })
 }
 
 async function main() {
-  if (!fs.existsSync('./output/')) fs.mkdirSync('./output/')
-  if (!fs.existsSync('./output/pwa/')) fs.mkdirSync('./output/pwa/')
-  if (!fs.existsSync('./output/pwa/temp')) fs.mkdirSync('./output/pwa/temp')
+  if (!fs.existsSync('./output/')) fs.mkdirSync('./output/');
+  if (!fs.existsSync('./output/pwa/')) fs.mkdirSync('./output/pwa/');
+  if (!fs.existsSync('./output/pwa/temp')) fs.mkdirSync('./output/pwa/temp');
 
   let backgroundColor = '#fff'
-  if (process.argv[2] === 'dominant') backgroundColor = (await sharp('input.png').stats()).dominant
-  else if (process.argv[2] === 'dark') backgroundColor = '#121212'
-  else if (process.argv[2] === 'color' && process.argv[3] != null) backgroundColor = process.argv[3]
+  if (process.argv[2] === 'dominant') backgroundColor = (await sharp('input.png').stats()).dominant;
+  else if (process.argv[2] === 'dark') backgroundColor = '#121212';
+  else if (process.argv[2] === 'color' && process.argv[3] != null) backgroundColor = process.argv[3];
 
   // Preview
   sharp('input.png')
@@ -58,7 +58,7 @@ async function main() {
     .toFile('./output/preview.jpg', (err, _) => {
       if (err) console.error(err.message)
       else console.log('Created jpg image: 1200 x 630')
-    })
+    });
 
   // Apple touch icon
   sharp('input.png')
@@ -71,14 +71,14 @@ async function main() {
     .toFile('./output/apple-touch-icon.png', (err, _) => {
       if (err) console.error(err.message)
       else console.log('Created png image: ' + APPLE_TOUCH_ICON_SIZE)
-    })
+    });
 
   // PWA icons
-  innerSize = Math.round(ICON_MAX_SIZE * .92 / 2) * 2
-  margin = (ICON_MAX_SIZE - innerSize) / 2
+  innerSize = Math.round(ICON_MAX_SIZE * .92 / 2) * 2;
+  margin = (ICON_MAX_SIZE - innerSize) / 2;
 
-  const r = innerSize / 2
-  const circleShape = Buffer.from(`<svg><circle cx="${r}" cy="${r}" r="${r}" /></svg>`)
+  const r = innerSize / 2;
+  const circleShape = Buffer.from(`<svg><circle cx="${r}" cy="${r}" r="${r}" /></svg>`);
   const baseImage = await sharp('input.png')
     .resize(innerSize, innerSize, {
         fit: sharp.fit.contain,
@@ -96,28 +96,26 @@ async function main() {
       right: margin,
       background: { r: 0, g: 0, b: 0, alpha: 0 }
     })
-    .toBuffer()
+    .toBuffer();
 
   for (item of files) {
-    if (!fs.existsSync('./output/pwa/' + item[1])) fs.mkdirSync('./output/pwa/' + item[1])
+    if (!fs.existsSync('./output/pwa/' + item[1])) fs.mkdirSync('./output/pwa/' + item[1]);
     await sharp(baseImage)
       .resize(item[0], item[0])
       .png()
       .toFile('./output/pwa/' + item[1] + item[2], (err, info) => {
-        if (err) console.error(err.message)
-        else console.log('Created png image: ' + info.width)
-      })
+        if (err) console.error(err.message);
+        else console.log('Created png image: ' + info.width);
+      });
   }
 
   // Favicon
-  while (!fs.existsSync('./output/pwa/temp/256.png')) await delay(100)
+  while (!fs.existsSync('./output/pwa/temp/256.png')) await delay(500);
   toIco([fs.readFileSync('./output/pwa/temp/256.png')]).then(buf => {
-    fs.writeFileSync('./output/favicon.ico', buf)
-    console.log('Created ico image: 256')
-  }).catch(error => {
-    console.error(error)
-  });
-  fs.rmdirSync('./output/pwa/temp', { recursive: true })
+    fs.writeFileSync('./output/favicon.ico', buf);
+    console.log('Created ico image: 256');
+  }).catch(() => console.error('Failed creating ico image'));
+  fs.rmdirSync('./output/pwa/temp', { recursive: true });
 }
 
 main()
