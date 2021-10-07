@@ -1,5 +1,6 @@
 const fs = require('fs'), sharp = require('sharp'), toIco = require('to-ico')
 
+const ICON_MAX_SIZE = 1024
 const APPLE_TOUCH_ICON_SIZE = 180
 
 const files = [
@@ -12,10 +13,6 @@ const files = [
   [512, '','logo.png'],
   [256, 'temp/','256.png']
 ]
-
-const width = 1024
-const r = width / 2
-const circleShape = Buffer.from(`<svg><circle cx="${r}" cy="${r}" r="${r}" /></svg>`)
 
 if (!fs.existsSync('input.png')) {
   console.log('Please make sure a file named "input.png" exists in this directory')
@@ -77,8 +74,13 @@ async function main() {
     })
 
   // PWA icons
+  innerSize = Math.round(ICON_MAX_SIZE * .92 / 2) * 2
+  margin = (ICON_MAX_SIZE - innerSize) / 2
+
+  const r = innerSize / 2
+  const circleShape = Buffer.from(`<svg><circle cx="${r}" cy="${r}" r="${r}" /></svg>`)
   const baseImage = await sharp('input.png')
-    .resize(width, width, {
+    .resize(innerSize, innerSize, {
         fit: sharp.fit.contain,
         background: backgroundColor
     })
@@ -87,21 +89,19 @@ async function main() {
       input: circleShape,
       blend: 'dest-in'
     }])
+    .extend({
+      top: margin,
+      bottom: margin,
+      left: margin,
+      right: margin,
+      background: { r: 0, g: 0, b: 0, alpha: 0 }
+    })
     .toBuffer()
 
   for (item of files) {
     if (!fs.existsSync('./output/pwa/' + item[1])) fs.mkdirSync('./output/pwa/' + item[1])
-    innerSize = Math.round(item[0] * .92 / 2) * 2
-    margin = (item[0] - innerSize) / 2
     await sharp(baseImage)
-      .resize(innerSize, innerSize)
-      .extend({
-        top: margin,
-        bottom: margin,
-        left: margin,
-        right: margin,
-        background: { r: 0, g: 0, b: 0, alpha: 0 }
-      })
+      .resize(item[0], item[0])
       .png()
       .toFile('./output/pwa/' + item[1] + item[2], (err, info) => {
         if (err) console.error(err.message)
